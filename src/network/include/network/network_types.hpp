@@ -2,22 +2,32 @@
 #define NETWORK_NETWORK_TYPES_HPP
 
 #include <string>
+#include <vector>
+#include <cstddef>
+#include <cstdint>
 
 namespace genesis::network {
 
+enum class ConnectionState {
+    DISCONNECTED,
+    RESOLVING,
+    CONNECTING,
+    CONNECTED,
+};
+
+struct ConnectionConfig { std::string host; uint16_t port; };
+
 struct NetworkError { std::string errorMessage; };
 
-struct GMCPMessage { std::string message; };
-struct MudTextChunk { std::string text; }; // no IAC control codes, inside SB
+struct GmcpPayload { std::string body; };
+struct MudTextChunk { std::string text; };
 
-/**
- * @brief Stores the result of a Telnet feed, with the additional wireReplies member for suggesting immediate replies
- *
- */
 struct TelnetFeedResult {
     std::vector<MudTextChunk> textChunks;
-    std::vector<GMCPMessage> gmcpMessages;
+    std::vector<GmcpPayload> gmcpPayloads;
     std::vector<std::byte> wireReplies; // send immediately
+
+    bool negotiatedNow = false;
 };
 
 } // namespace genesis::network

@@ -2,7 +2,12 @@
 #define NETWORK_TELNET_CODEC_HPP
 
 #include <string>
+#include <string_view>
 #include <network/network_types.hpp>
+#include <span>
+#include <vector>
+#include <cstddef>
+#include <cstdint>
 
 namespace genesis::network {
 
@@ -32,14 +37,18 @@ public:
     /**
      * @brief Feeds bytes to the Telnet codec and returns the result.
      *
-     * @details Steps the internal state machine based off of the input bytes
+     * @details Steps the internal state machine based off of the input bytes. Adds replies only for protocol autoreplies
      * 
      * @param bytes The bytes to feed to the Telnet codec.
      * @return The result of the Telnet codec.
     */
-    TelnetFeedResult feedBytes(std::span<const std::byte> bytes);
+    TelnetFeedResult feed(std::span<const std::byte> bytes);
     
-    std::vector<std::byte> encodeLine(const std::string_view line);
+    std::vector<std::byte> encodeLine(std::string_view line);
+    std::vector<std::byte> encodeGmcp(std::string_view body);
+
+    bool gmcpEnabled() const noexcept;
+    void reset();
 
 private:
     enum class ParserState {

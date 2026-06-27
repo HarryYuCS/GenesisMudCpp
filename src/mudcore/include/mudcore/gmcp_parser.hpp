@@ -1,23 +1,21 @@
 #ifndef MUDCORE_GMCP_PARSER_HPP
 #define MUDCORE_GMCP_PARSER_HPP
 
+#include <optional>
 #include <string>
-#include <network/network_types.hpp>
-#include <unordered_map>
+#include <string_view>
 
 namespace genesis::mudcore {
 
-class GMCPParser {
-public:
-    GMCPParser();
-    ~GMCPParser();
+struct GmcpMessage {
+    std::string package;
+    std::string jsonBody;
+};
 
-    /**
-     * @brief Parses a GMCP message and returns a map of the GMCP message data.
-     * @param gmcpMessage The GMCP message to parse.
-     * @return A map of the GMCP message data.
-     */
-    std::unordered_map<std::string, std::string> parseGMCPMessage(const genesis::network::GMCPMessage& gmcpMessage) const;
+class GmcpParser {
+public:
+    /** @brief Split "Package.Name {...}" into package + JSON body. */
+    std::optional<GmcpMessage> parse(std::string_view raw) const;
 };
 
 } // namespace genesis::mudcore

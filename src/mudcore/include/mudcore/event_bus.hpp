@@ -1,31 +1,30 @@
 #ifndef MUDCORE_EVENT_BUS_HPP
 #define MUDCORE_EVENT_BUS_HPP
 
-#include <queue>
-#include <mutex>
-#include <condition_variable>
 #include <mudcore/event.hpp>
+
+#include <mutex>
+#include <queue>
+#include <vector>
 
 namespace genesis::mudcore {
 
+/**
+ * @brief Thread-safe inbound queue (io thread produces, main thread consumes in poll()).
+ */
 class EventBus {
 public:
-    EventBus();
-    ~EventBus();
+    EventBus() = default;
 
-    void enqueueServerEvent(const ServerEvent& event);
-    void enqueueClientEvent(const ClientEvent& event);
-    ServerEvent dequeueServerEvent();
-    ClientEvent dequeueClientEvent();
+    void enqueueInboundEvent(Event event);
+
+    std::vector<Event> drainInboundEvents();
+
+    bool isEmpty() const;
 
 private:
-    std::queue<ServerEvent> serverEventQueue;
-    std::queue<ClientEvent> clientEventQueue;
-
-    std::mutex serverEventQueueMutex;
-    std::mutext clientEventQueueMutex;
-    std::condition_variable serverEventQueueCondition;
-    std::condition_variable clientEventQueueCondition;
+    mutable std::mutex inboundEventQueueMutex_;
+    std::queue<Event> inboundEventQueue_;
 };
 
 } // namespace genesis::mudcore

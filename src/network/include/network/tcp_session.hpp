@@ -5,6 +5,8 @@
 #include <network/network_types.hpp>
 #include <string>
 #include <functional>
+#include <span>
+#include <cstddef>
 
 namespace genesis::network {
 
@@ -25,20 +27,26 @@ public:
      * @param port The port to connect to.
      * @param readHandler The callback to use for reading data.
      */
-    explicit TcpSession(boost::asio::io_context& ioContext, const std::string& host, std::uint16_t port, ReadHandler readHandler);
+    explicit TcpSession(boost::asio::io_context& ioContext);
     ~TcpSession();
 
-    void connect();
+    void connect(const ConnectionConfig& config);
     void disconnect();
 
-    void send(const std::string& message);
-    void receive();
+    void send(std::span<const std::byte> data);
+
+    void setReadHandler(ReadHandler readHandler);
+
+    ConnectionState getConnectionState() const;
 
 private:
+    ConnectionState connectionState_;
     boost::asio::io_context& ioContext_;
     boost::asio::ip::tcp::socket socket_;
     boost::asio::ip::tcp::resolver resolver_;
 
+    std::array<std::byte, 1024> readBuffer_;
+    // internal lambda calls read handler
     ReadHandler readHandler_;
 
     void onReadError(const boost::system::error_code& error);
