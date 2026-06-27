@@ -1,3 +1,12 @@
+/**
+ * @file session.hpp
+ * @brief Central orchestrator between network I/O, mudcore logic, and the GUI.
+ *
+ * Thread model:
+ * - Main thread: connect(), disconnect(), sendCommand(), poll(), gameState().
+ * - Io thread: onTcpRead() via TcpSession read handler; outbound sends via asio::post.
+ */
+
 #ifndef MUDCORE_SESSION_HPP
 #define MUDCORE_SESSION_HPP
 
@@ -22,42 +31,113 @@
 
 namespace genesis::mudcore {
 
+/**
+ * @brief Result of one poll() call for the GUI to consume.
+ */
 struct PollResult {
-    std::vector<DisplayLine> lines;
-    bool stateChanged{false};
-    ConnectionPhase connectionPhase{ConnectionPhase::Disconnected};
+    std::vector<DisplayLine> lines;                              ///< New text to render this frame.
+    bool stateChanged{false};                                    ///< true if GameState was updated; refresh map/status.
+    ConnectionPhase connectionPhase{ConnectionPhase::Disconnected}; ///< For connection indicator in the UI.
 };
 
 /**
- * @brief Orchestrates network I/O, thread bridging, pipelines, and connection lifecycle.
+ * @brief Manages the MUD session: TCP, telnet, GMCP handshake, event bridging, and pipelines.
  *
- * Main thread: connect, disconnect, sendCommand, poll, gameState.
- * Io thread: onTcpRead (via TcpSession read handler).
+ * This is the only mudcore type the GUI should interact with directly.
  */
 class Session {
 public:
+    /**
+     * @brief Construct a session bound to an io_context for async network I/O.
+     * @param ioContext Shared io_context run on the network thread.
+     */
     explicit Session(boost::asio::io_context& ioContext);
+
     Session(const Session&) = delete;
     Session(Session&&) = delete;
     Session& operator=(const Session&) = delete;
     Session& operator=(Session&&) = delete;
     ~Session() = default;
 
+    /**
+     * @brief Start an async connection to the MUD server.
+     *
+     * Main thread only. Updates ConnectionLifeCycle to Connecting.
+     *
+     * @param host Hostname (e.g. "mud.genesismud.org").
+     * @param port Port number (e.g. 3011).
+     */
     void connect(const std::string& host, std::uint16_t port);
+
+    /**
+     * @brief Close the TCP connection and reset connection phase.
+     *
+     * Main thread only.
+     */
     void disconnect();
 
+    /**
+     * @brief Drain inbound events and produce display output for the GUI.
+     *
+     * Call from a wxTimer on the main thread (~30 ms). Runs pipelines and updates GameState.
+     *
+     * @return Lines to render and flags for state/connection UI updates.
+     */
     PollResult poll();
+
+    /**
+     * @brief Read-only access to structured game state for map and status panels.
+     * @return Current GameState snapshot.
+     */
     const GameState& gameState() const noexcept;
+
+    /**
+     * @brief Current application connection phase.
+     * @return Phase from ConnectionLifeCycle.
+     */
     ConnectionPhase connectionPhase() const noexcept;
 
+    /**
+     * @brief Send a user command to the MUD.
+     *
+     * Runs OutboundPipeline on the main thread, then posts the encoded line to the io thread.
+     *
+     * @param command Raw input from the input bar.
+     */
     void sendCommand(std::string_view command);
 
 private:
+    /**
+     * @brief TcpSession read handler (io thread).
+     *
+     * Feeds TelnetCodec, writes wire replies, enqueues inbound events, and triggers GMCP handshake.
+     *
+     * @param data Raw bytes received from the socket.
+     */
     void onTcpRead(std::span<const std::byte> data);
+
+    /**
+     * @brief Send telnet protocol auto-replies immediately (io thread).
+     * @param telnetFeedResult Result from TelnetCodec::feed containing wireReplies.
+     */
     void writeWireReplies(const genesis::network::TelnetFeedResult& telnetFeedResult);
+
+    /**
+     * @brief Convert telnet output into inbound Events and enqueue them (io thread).
+     * @param telnetFeedResult Parsed text chunks and GMCP payloads from TelnetCodec.
+     */
     void enqueueInboundFromTelnet(const genesis::network::TelnetFeedResult& telnetFeedResult);
 
+    /**
+     * @brief Encode and send a GMCP subnegotiation body (io thread).
+     * @param body GMCP message body (e.g. "Core.Hello {...}").
+     */
     void sendGmcp(std::string_view body);
+
+    /**
+     * @brief Encode and send a user command line with telnet CRLF framing (io thread).
+     * @param line Command text without trailing newline.
+     */
     void sendLine(std::string_view line);
 
     boost::asio::io_context& ioContext_;
