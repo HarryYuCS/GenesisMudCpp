@@ -11,5 +11,12 @@ add_executable(${PROJECT_NAME})
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/network)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/mudcore)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/gui)
-
 target_link_libraries(${PROJECT_NAME} PRIVATE gui)
+
+# Testing
+include(CTest)
+
+if (BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
+endif()

@@ -1,20 +1,18 @@
 #include <mudcore/event_bus.hpp>
 
+#include <utility>
+
 namespace genesis::mudcore {
 
 void EventBus::enqueueInboundEvent(Event event) {
     std::lock_guard lock(inboundEventQueueMutex_);
-    inboundEventQueue_.push(std::move(event));
+    inboundEventQueue_.push_back(std::move(event));
 }
 
 std::vector<Event> EventBus::drainInboundEvents() {
-    std::lock_guard lock(inboundEventQueueMutex_);
     std::vector<Event> events;
-    events.reserve(inboundEventQueue_.size());
-    while (!inboundEventQueue_.empty()) {
-        events.push_back(std::move(inboundEventQueue_.front()));
-        inboundEventQueue_.pop();
-    }
+    std::lock_guard lock(inboundEventQueueMutex_);
+    std::swap(events, inboundEventQueue_);
     return events;
 }
 

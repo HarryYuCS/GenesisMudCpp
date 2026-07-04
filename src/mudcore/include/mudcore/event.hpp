@@ -19,23 +19,26 @@ namespace genesis::mudcore {
  * @brief Kind of inbound event produced by Session on the io thread.
  */
 enum class EventType {
-    Connected,    ///< TCP connection established.
-    Disconnected, ///< TCP connection closed or lost.
-    Error,        ///< Network or protocol error; payload is NetworkError.
-    MudText,      ///< Player-visible MUD text; payload is std::string.
-    GmcpRaw,      ///< Raw GMCP body ("Package.Name {...}"); payload is std::string.
+    Connected,      ///< TCP connection established.
+    Disconnected,   ///< TCP connection closed or lost (always follows Error).
+    Error,          ///< Network or protocol error; payload is NetworkError.
+    GmcpNegotiated, ///< Telnet GMCP option negotiated; poll() triggers the Core handshake.
+    MudText,        ///< Player-visible MUD text; payload is std::string.
+    GmcpRaw,        ///< Raw GMCP body ("Package.Name {...}"); payload is std::string.
 };
 
 /**
  * @brief Inbound event queued on the io thread and drained in Session::poll() on the main thread.
  *
+ * Construct with aggregate initialization: Event{type, payload}.
+ *
  * Payload interpretation depends on @p type:
  * - MudText, GmcpRaw: std::string
  * - Error: genesis::network::NetworkError
- * - Connected, Disconnected: std::monostate
+ * - Connected, Disconnected, GmcpNegotiated: std::monostate
  */
 struct Event {
-    EventType type{EventType::MudText};
+    EventType type;
     std::variant<std::monostate, std::string, genesis::network::NetworkError> payload;
 };
 

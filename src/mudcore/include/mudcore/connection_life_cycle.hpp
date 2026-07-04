@@ -74,6 +74,13 @@ public:
      */
     void onTcpDisconnected();
 
+    /**
+     * @brief Player logged in (Char.Login broadcast received).
+     *
+     * Transitions HandshakeSent -> Ready. No-op if not HandshakeSent.
+     */
+    void onPlayerLoggedIn();
+
 private:
     /** @brief Send Core.Hello and Core.Supports.Set; sets phase to HandshakeSent. */
     void sendGenesisHandshake();

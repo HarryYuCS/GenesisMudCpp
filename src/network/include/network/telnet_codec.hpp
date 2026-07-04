@@ -84,14 +84,25 @@ public:
     void reset();
 
 private:
-    enum class ParserState {
-        OPTION_NEGOTIATION, ///< Parsing IAC WILL/WONT/DO/DONT sequences.
-        SUBNEGOTIATION,     ///< Inside IAC SB ... IAC SE.
-        PLAIN_TEXT,         ///< Accumulating printable MUD text.
+    enum class ParsePhase {
+        Plain,
+        AwaitCommand,
+        AwaitOption,
+        AwaitSbOption,
+        SbBody,
+        SkipSb,
     };
 
-    ParserState parserState;
-    bool inCommand; ///< true if the previous byte was IAC awaiting a command byte.
+    void processByte(std::byte byte, TelnetFeedResult& result);
+    void flushTextBuffer(TelnetFeedResult& result);
+    void processSubnegByte(std::uint8_t byte, TelnetFeedResult& result, bool emitPayload);
+
+    ParsePhase phase_{ParsePhase::Plain};
+    std::uint8_t pendingCommand_{0};
+    bool gmcpEnabled_{false};
+    bool awaitingSe_{false};
+    std::string textBuffer_;
+    std::string sbBuffer_;
 };
 
 } // namespace genesis::network

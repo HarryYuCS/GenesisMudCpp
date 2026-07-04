@@ -29,7 +29,9 @@ public:
      * @brief Parse a GMCP payload of the form "Package.Name {...}".
      *
      * @param raw Full GMCP body from telnet subnegotiation (no IAC framing).
-     * @return Parsed message, or a package-only message if no space separator is found.
+     * @return Parsed message; std::nullopt for empty or whitespace-only input. Trims
+     *         leading/trailing whitespace on the payload and both split fields. Splits on
+     *         the first space only; returns a package-only message when no separator is found.
      */
     std::optional<GmcpMessage> parse(std::string_view raw) const;
 };

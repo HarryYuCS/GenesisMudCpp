@@ -3,8 +3,12 @@
  * @brief Central orchestrator between network I/O, mudcore logic, and the GUI.
  *
  * Thread model:
- * - Main thread: connect(), disconnect(), sendCommand(), poll(), gameState().
- * - Io thread: onTcpRead() via TcpSession read handler; outbound sends via asio::post.
+ * - Main thread: connect(), disconnect(), sendCommand(), sendGmcp(), poll(), gameState().
+ *   ConnectionLifeCycle and GameState are mutated only here (during poll() or connect()/disconnect()).
+ * - Io thread: all TcpSession and TelnetCodec access. onTcpRead() runs via the TcpSession read
+ *   handler; connect/disconnect/sends are posted from the main thread with asio::post.
+ * - Bridge: io-thread observations (Connected, Disconnected, Error, GmcpNegotiated, MudText,
+ *   GmcpRaw) travel through EventBus and are consumed by poll().
  */
 
 #ifndef MUDCORE_SESSION_HPP
@@ -14,7 +18,6 @@
 #include <mudcore/display_line.hpp>
 #include <mudcore/event_bus.hpp>
 #include <mudcore/game_state.hpp>
-#include <mudcore/gmcp_parser.hpp>
 #include <mudcore/inbound_pipeline.hpp>
 #include <mudcore/outbound_pipeline.hpp>
 #include <network/network_types.hpp>
@@ -106,11 +109,21 @@ public:
      */
     void sendCommand(std::string_view command);
 
+    /**
+     * @brief Send a GMCP message body to the server.
+     *
+     * Main thread only. Posted to the io thread for telnet encoding and transmission.
+     *
+     * @param body GMCP payload (e.g. R"(Char.Login {"name":"x","password":"y"})").
+     */
+    void sendGmcp(std::string_view body);
+
 private:
     /**
      * @brief TcpSession read handler (io thread).
      *
-     * Feeds TelnetCodec, writes wire replies, enqueues inbound events, and triggers GMCP handshake.
+     * Feeds TelnetCodec, writes wire replies, and enqueues inbound events
+     * (including GmcpNegotiated, which poll() turns into the Core handshake).
      *
      * @param data Raw bytes received from the socket.
      */
@@ -129,27 +142,23 @@ private:
     void enqueueInboundFromTelnet(const genesis::network::TelnetFeedResult& telnetFeedResult);
 
     /**
-     * @brief Encode and send a GMCP subnegotiation body (io thread).
-     * @param body GMCP message body (e.g. "Core.Hello {...}").
-     */
-    void sendGmcp(std::string_view body);
-
-    /**
      * @brief Encode and send a user command line with telnet CRLF framing (io thread).
      * @param line Command text without trailing newline.
      */
     void sendLine(std::string_view line);
 
     boost::asio::io_context& ioContext_;
+
+    // telnetCodec_ and eventBus_ must outlive tcpSession_: its destructor can fire
+    // the disconnected handler, which touches both.
     genesis::network::TelnetCodec telnetCodec_;
+    EventBus eventBus_;
     genesis::network::TcpSession tcpSession_;
 
     InboundPipeline inboundPipeline_;
     OutboundPipeline outboundPipeline_;
-    GmcpParser gmcpParser_;
     ConnectionLifeCycle connectionLifeCycle_;
 
-    EventBus eventBus_;
     GameState gameState_;
 };
 

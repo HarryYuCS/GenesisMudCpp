@@ -9,7 +9,6 @@
 #include <mudcore/event.hpp>
 
 #include <mutex>
-#include <queue>
 #include <vector>
 
 namespace genesis::mudcore {
@@ -47,7 +46,7 @@ public:
 
 private:
     mutable std::mutex inboundEventQueueMutex_;
-    std::queue<Event> inboundEventQueue_;
+    std::vector<Event> inboundEventQueue_;
 };
 
 } // namespace genesis::mudcore

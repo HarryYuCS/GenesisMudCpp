@@ -10,39 +10,56 @@
 #include <mudcore/game_state.hpp>
 #include <mudcore/gmcp_parser.hpp>
 
+#include <optional>
 #include <string_view>
-#include <vector>
 
 namespace genesis::mudcore {
 
 /**
+ * @brief Result of processing one raw GMCP body through the inbound pipeline.
+ *
+ * stateChanged and playerLoggedIn are orthogonal effects (a Char.Login both changes
+ * state and logs the player in) and drive different consumers (UI refresh vs. connection
+ * lifecycle), so they are separate bools rather than a one-of-N enum. If a third
+ * lifecycle-relevant effect is added, switch to a flags enum instead of growing bools.
+ */
+struct GmcpInboundResult {
+    std::optional<DisplayLine> line; ///< Comms display line, if applicable.
+    bool stateChanged{false};        ///< true if GameState was updated (GUI should refresh).
+    bool playerLoggedIn{false};      ///< true if this message was Char.Login and state is now logged in.
+};
+
+/**
  * @brief Pure processing pipeline for server-to-client data.
  *
- * Returns DisplayLines for the GUI and may update GameState from GMCP.
- * Does not enqueue Events or interact with the EventBus — Session owns that.
+ * Returns at most one DisplayLine per call; Session aggregates across events in poll().
+ * Parses GMCP and may update GameState. Does not enqueue Events or interact with the EventBus.
  */
 class InboundPipeline {
 public:
     /**
      * @brief Wrap raw MUD text as a main-window DisplayLine.
      *
-     * Trigger matching and additional routing will be added here later.
-     *
      * @param text Player-visible text from telnet (no IAC bytes).
-     * @return One or more lines to append to the GUI.
+     * @return A line for the main window, or std::nullopt for empty input.
      */
-    std::vector<DisplayLine> processMudText(std::string_view text) const;
+    std::optional<DisplayLine> processMudText(std::string_view text) const;
 
     /**
-     * @brief Process a parsed GMCP message: update state and optionally emit display lines.
+     * @brief Parse and process a raw GMCP body from telnet subnegotiation.
      *
-     * Comm.* packages are routed to OutputSink::Comms; other packages may only update GameState.
+     * Comm.* packages are routed to OutputSink::Comms; other packages update GameState.
      *
-     * @param message Parsed GMCP message.
+     * @param rawBody Full GMCP body (e.g. "Char.Vitals {...}").
      * @param gameState GameState to update (main thread only).
-     * @return Display lines for chat or system output; may be empty.
+     * @return GmcpInboundResult containing the optional display line and the boolean flags for stateChanged and playerLoggedIn.
      */
-    std::vector<DisplayLine> processGmcp(const GmcpMessage& message, GameState& gameState) const;
+    GmcpInboundResult processGmcp(std::string_view rawBody, GameState& gameState) const;
+
+private:
+    GmcpInboundResult processParsedGmcp(const GmcpMessage& message, GameState& gameState) const;
+
+    GmcpParser gmcpParser_;
 };
 
 } // namespace genesis::mudcore

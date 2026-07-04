@@ -35,6 +35,12 @@ void ConnectionLifeCycle::onTcpDisconnected() {
     phase_ = ConnectionPhase::Disconnected;
 }
 
+void ConnectionLifeCycle::onPlayerLoggedIn() {
+    if (phase_ == ConnectionPhase::HandshakeSent) {
+        phase_ = ConnectionPhase::Ready;
+    }
+}
+
 void ConnectionLifeCycle::sendGenesisHandshake() {
     sendGmcp_(R"(Core.Hello {"client":"GenesisCpp","version":"0.1"})");
     sendGmcp_(R"(Core.Supports.Set ["Char 1","Room 1","Comm 1","Core 1"])");

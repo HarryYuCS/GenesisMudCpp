@@ -10,6 +10,7 @@
 
 #include <mudcore/gmcp_parser.hpp>
 
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -17,13 +18,17 @@
 namespace genesis::mudcore {
 
 /**
- * @brief Room data derived from GMCP Room.* packages.
+ * @brief Room data derived from GMCP Room.Info and Room.Map packages.
  */
 struct RoomInfo {
     std::string roomId;
-    std::string map;          ///< Map identifier or layout data from the server.
-    std::string description;
+    std::string shortDescription;
     std::vector<std::string> exits;
+    std::vector<std::string> doors;
+    std::optional<int> x;
+    std::optional<int> y;
+    std::string map;   ///< Map graphics from Room.Map.
+    std::string zoom;  ///< Zoomed map graphics from Room.Map.
 };
 
 /**
@@ -35,10 +40,12 @@ public:
      * @brief Apply a parsed GMCP message to internal state.
      *
      * Package-specific handlers (Char.Vitals, Room.Info, etc.) are implemented here.
+     * Package names are matched case-insensitively; JSON keys are case-sensitive.
      *
      * @param message Parsed GMCP message from GmcpParser.
+     * @return true if any tracked game state field was updated.
      */
-    void applyGmcp(const GmcpMessage& message);
+    bool applyGmcp(const GmcpMessage& message);
 
     /**
      * @brief Current room information for the magic map panel.
@@ -48,9 +55,15 @@ public:
 
     /**
      * @brief Whether the player is logged in to the MUD.
-     * @return true if a successful login has been recorded.
+     * @return true after a Char.Login broadcast with a name field.
      */
     bool loggedIn() const noexcept;
+
+    /**
+     * @brief Player name from the Char.Login broadcast.
+     * @return Name string, or empty if not logged in.
+     */
+    const std::string& playerName() const noexcept;
 
     /**
      * @brief Store an arbitrary named variable.
@@ -66,35 +79,38 @@ public:
      */
     std::string getVariable(const std::string& name) const;
 
-    /** @brief Current mana level as reported by the server (string abstraction). */
-    const std::string& manaLevel() const noexcept;
-
-    /** @brief Current health level as reported by the server. */
+    /** @brief Current health vital as reported by Char.Vitals (textual level). */
     const std::string& healthLevel() const noexcept;
 
-    /** @brief Current stamina level as reported by the server. */
-    const std::string& staminaLevel() const noexcept;
+    /** @brief Current mana vital as reported by Char.Vitals (textual level). */
+    const std::string& manaLevel() const noexcept;
 
-    /** @brief Current encumbrance level as reported by the server. */
-    const std::string& encumberanceLevel() const noexcept;
+    /** @brief Current food vital as reported by Char.Vitals (textual level). */
+    const std::string& foodLevel() const noexcept;
 
-    /** @brief Current hunger level as reported by the server. */
-    const std::string& hungerLevel() const noexcept;
+    /** @brief Current drink vital as reported by Char.Vitals (textual level). */
+    const std::string& drinkLevel() const noexcept;
 
-    /** @brief Current thirst level as reported by the server. */
-    const std::string& thirstLevel() const noexcept;
+    /** @brief Current fatigue vital as reported by Char.Vitals (textual level). */
+    const std::string& fatigueLevel() const noexcept;
+
+    /** @brief Current intoxication vital as reported by Char.Vitals (textual level). */
+    const std::string& intoxicationLevel() const noexcept;
 
 private:
+    struct GmcpApplier;
+
     std::unordered_map<std::string, std::string> variables_;
 
-    std::string manaLevel_;
     std::string healthLevel_;
-    std::string staminaLevel_;
-    std::string encumberanceLevel_;
-    std::string hungerLevel_;
-    std::string thirstLevel_;
+    std::string manaLevel_;
+    std::string foodLevel_;
+    std::string drinkLevel_;
+    std::string fatigueLevel_;
+    std::string intoxicationLevel_;
 
     RoomInfo currentRoomInfo_;
+    std::string playerName_;
     bool loggedIn_{false};
 };
 

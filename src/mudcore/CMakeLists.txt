@@ -1,3 +1,11 @@
+include(FetchContent)
+
+FetchContent_Declare(
+    json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+)
+FetchContent_MakeAvailable(json)
+
 add_library(mudcore STATIC)
 
 target_sources(mudcore
@@ -19,4 +27,5 @@ target_include_directories(mudcore
 target_link_libraries(mudcore
     PUBLIC
         network
+        nlohmann_json::nlohmann_json
 )
