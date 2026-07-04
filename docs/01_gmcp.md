@@ -21,7 +21,8 @@ Example: { "name" : "eowul" }
 
 **Char.Login**
 - Sent upon successful login. The uid is unlikely to change for a player, but there are no guarantees given.
-connectionLifeExample: { "name" : "eowul", "uid" : <uid> }
+```
+Example: { "name" : "eowul", "uid" : <uid> }
 ```
 
 **Char.StatusVars**
