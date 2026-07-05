@@ -28,6 +28,7 @@ void TcpSession::connect(const ConnectionConfig& config) {
     resolver_.async_resolve(
         config.host,
         std::to_string(config.port),
+        // on resolution or error, either immediately connect or fail connection
         [this](const boost::system::error_code& error, const boost::asio::ip::tcp::resolver::results_type& results) {
             if (error) {
                 failConnection(error);
@@ -38,6 +39,7 @@ void TcpSession::connect(const ConnectionConfig& config) {
             boost::asio::async_connect(
                 socket_,
                 results,
+                // on connection or error, either handle connection or fail connection
                 [this](const boost::system::error_code& connectError, const boost::asio::ip::tcp::endpoint&) {
                     if (connectError) {
                         failConnection(connectError);
@@ -65,10 +67,12 @@ void TcpSession::disconnect() {
 }
 
 void TcpSession::send(const std::span<const std::byte> data) {
+    // only send if connected and there is data to send
     if (connectionState_ != ConnectionState::CONNECTED || data.empty()) {
         return;
     }
 
+    // queue up pending writes for startNextWrite
     pendingWrites_.emplace_back(data.begin(), data.end());
     startNextWrite();
 }
@@ -94,6 +98,7 @@ ConnectionState TcpSession::getConnectionState() const {
 }
 
 void TcpSession::startRead() {
+    // only read if connected, not currently already reading, and a read handler is set
     if (connectionState_ != ConnectionState::CONNECTED || readInProgress_ || !readHandler_) {
         return;
     }
@@ -101,6 +106,7 @@ void TcpSession::startRead() {
     readInProgress_ = true;
     socket_.async_read_some(
         boost::asio::buffer(readBuffer_),
+        // on read or error, either fail connection or call read handler/onPeerDisconnected depending on bytes read
         [this](const boost::system::error_code& error, const std::size_t bytesRead) {
             readInProgress_ = false;
 
@@ -127,6 +133,7 @@ void TcpSession::startRead() {
 }
 
 void TcpSession::startNextWrite() {
+    // only write if not currently already writing, and there are pending writes
     if (writeInProgress_ || pendingWrites_.empty()) {
         return;
     }
@@ -148,7 +155,7 @@ void TcpSession::startNextWrite() {
             }
 
             pendingWrites_.pop_front();
-            startNextWrite();
+            startNextWrite(); // keep on writing until empty
         });
 }
 

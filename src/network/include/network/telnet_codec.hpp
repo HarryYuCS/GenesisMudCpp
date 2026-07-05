@@ -93,8 +93,11 @@ private:
         SkipSb,
     };
 
+    // process a single byte of telnet data
     void processByte(std::byte byte, TelnetFeedResult& result);
+    // flush the accumulated text buffer (happens every feed call)
     void flushTextBuffer(TelnetFeedResult& result);
+    // process a subneg byte, only flushes buffer if SE is received
     void processSubnegByte(std::uint8_t byte, TelnetFeedResult& result, bool emitPayload);
 
     ParsePhase phase_{ParsePhase::Plain};

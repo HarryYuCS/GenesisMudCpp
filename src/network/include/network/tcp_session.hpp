@@ -94,7 +94,10 @@ public:
     ConnectionState getConnectionState() const;
 
 private:
+    /** @brief Start the read operation. */
     void startRead();
+
+    /** @brief Start the next write operation from the pending writes queue. */
     void startNextWrite();
 
     /** @brief Report a fatal async failure, close the socket, and notify disconnect. */
@@ -108,16 +111,26 @@ private:
 
     std::atomic<ConnectionState> connectionState_;
     boost::asio::io_context& ioContext_;
+
+    // socket for the TCP connection
     boost::asio::ip::tcp::socket socket_;
+
+    // resolver for DNS
     boost::asio::ip::tcp::resolver resolver_;
 
+    // buffer for read operations
     std::array<std::byte, 1024> readBuffer_;
+
+    // handlers
     ReadHandler readHandler_;
     ConnectedHandler connectedHandler_;
     DisconnectedHandler disconnectedHandler_;
     ErrorHandler errorHandler_;
 
+    // queue of pending writes to be sent
     std::deque<std::vector<std::byte>> pendingWrites_;
+
+    // track pending writes and read to prevent concurrent read/write race conditions
     bool writeInProgress_{false};
     bool readInProgress_{false};
     bool disconnectNotified_{false};

@@ -3,6 +3,19 @@ add_library(gui OBJECT)
 target_sources(gui
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/app.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/main_frame.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/gui_controller.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/controls/main_display.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/controls/magic_map.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/controls/input_bar.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/panels/comms.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/panels/magic_map_panel.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/panels/map_notebook.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/panels/right_column.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/panels/vitals_bar.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/panels/system_log.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/panels/connection_footer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/menu/menu_bar.cpp
 )
 
 target_include_directories(gui
