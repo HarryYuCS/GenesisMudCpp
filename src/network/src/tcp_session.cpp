@@ -28,31 +28,43 @@ void TcpSession::connect(const ConnectionConfig& config) {
     resolver_.async_resolve(
         config.host,
         std::to_string(config.port),
-        // on resolution or error, either immediately connect or fail connection
-        [this](const boost::system::error_code& error, const boost::asio::ip::tcp::resolver::results_type& results) {
-            if (error) {
-                failConnection(error);
-                return;
-            }
-
-            connectionState_ = ConnectionState::CONNECTING;
-            boost::asio::async_connect(
-                socket_,
-                results,
-                // on connection or error, either handle connection or fail connection
-                [this](const boost::system::error_code& connectError, const boost::asio::ip::tcp::endpoint&) {
-                    if (connectError) {
-                        failConnection(connectError);
-                        return;
-                    }
-
-                    connectionState_ = ConnectionState::CONNECTED;
-                    if (connectedHandler_) {
-                        connectedHandler_();
-                    }
-                    startRead();
-                });
+        [this](const boost::system::error_code& error,
+               const boost::asio::ip::tcp::resolver::results_type& results) {
+            onResolveComplete(error, results);
         });
+}
+
+void TcpSession::onResolveComplete(
+    const boost::system::error_code& error,
+    const boost::asio::ip::tcp::resolver::results_type& results) {
+    if (error) {
+        failConnection(error);
+        return;
+    }
+
+    connectionState_ = ConnectionState::CONNECTING;
+    boost::asio::async_connect(
+        socket_,
+        results,
+        [this](const boost::system::error_code& connectError,
+               const boost::asio::ip::tcp::endpoint& endpoint) {
+            onConnectComplete(connectError, endpoint);
+        });
+}
+
+void TcpSession::onConnectComplete(
+    const boost::system::error_code& error,
+    const boost::asio::ip::tcp::endpoint&) {
+    if (error) {
+        failConnection(error);
+        return;
+    }
+
+    connectionState_ = ConnectionState::CONNECTED;
+    if (connectedHandler_) {
+        connectedHandler_();
+    }
+    startRead();
 }
 
 void TcpSession::disconnect() {
@@ -67,12 +79,10 @@ void TcpSession::disconnect() {
 }
 
 void TcpSession::send(const std::span<const std::byte> data) {
-    // only send if connected and there is data to send
     if (connectionState_ != ConnectionState::CONNECTED || data.empty()) {
         return;
     }
 
-    // queue up pending writes for startNextWrite
     pendingWrites_.emplace_back(data.begin(), data.end());
     startNextWrite();
 }
@@ -98,7 +108,6 @@ ConnectionState TcpSession::getConnectionState() const {
 }
 
 void TcpSession::startRead() {
-    // only read if connected, not currently already reading, and a read handler is set
     if (connectionState_ != ConnectionState::CONNECTED || readInProgress_ || !readHandler_) {
         return;
     }
@@ -106,34 +115,36 @@ void TcpSession::startRead() {
     readInProgress_ = true;
     socket_.async_read_some(
         boost::asio::buffer(readBuffer_),
-        // on read or error, either fail connection or call read handler/onPeerDisconnected depending on bytes read
         [this](const boost::system::error_code& error, const std::size_t bytesRead) {
-            readInProgress_ = false;
-
-            if (error) {
-                if (error == boost::asio::error::operation_aborted) {
-                    return;
-                }
-                if (error == boost::asio::error::eof) {
-                    onPeerDisconnected();
-                    return;
-                }
-                failConnection(error);
-                return;
-            }
-
-            if (bytesRead == 0) {
-                onPeerDisconnected();
-                return;
-            }
-
-            readHandler_(std::span<const std::byte>(readBuffer_.data(), bytesRead));
-            startRead();
+            onReadComplete(error, bytesRead);
         });
 }
 
+void TcpSession::onReadComplete(const boost::system::error_code& error, const std::size_t bytesRead) {
+    readInProgress_ = false;
+
+    if (error) {
+        if (isOperationAborted(error)) {
+            return;
+        }
+        if (error == boost::asio::error::eof) {
+            onPeerDisconnected();
+            return;
+        }
+        failConnection(error);
+        return;
+    }
+
+    if (bytesRead == 0) {
+        onPeerDisconnected();
+        return;
+    }
+
+    readHandler_(std::span<const std::byte>(readBuffer_.data(), bytesRead));
+    startRead();
+}
+
 void TcpSession::startNextWrite() {
-    // only write if not currently already writing, and there are pending writes
     if (writeInProgress_ || pendingWrites_.empty()) {
         return;
     }
@@ -143,24 +154,34 @@ void TcpSession::startNextWrite() {
     boost::asio::async_write(
         socket_,
         boost::asio::buffer(buffer.data(), buffer.size()),
-        [this](const boost::system::error_code& error, std::size_t) {
-            writeInProgress_ = false;
-
-            if (error) {
-                if (error == boost::asio::error::operation_aborted) {
-                    return;
-                }
-                failConnection(error);
-                return;
-            }
-
-            pendingWrites_.pop_front();
-            startNextWrite(); // keep on writing until empty
+        [this](const boost::system::error_code& error, const std::size_t bytesTransferred) {
+            onWriteComplete(error, bytesTransferred);
         });
 }
 
+void TcpSession::onWriteComplete(
+    const boost::system::error_code& error,
+    const std::size_t) {
+    writeInProgress_ = false;
+
+    if (error) {
+        if (isOperationAborted(error)) {
+            return;
+        }
+        failConnection(error);
+        return;
+    }
+
+    pendingWrites_.pop_front();
+    startNextWrite();
+}
+
+bool TcpSession::isOperationAborted(const boost::system::error_code& error) {
+    return error == boost::asio::error::operation_aborted;
+}
+
 void TcpSession::failConnection(const boost::system::error_code& error) {
-    if (error == boost::asio::error::operation_aborted) {
+    if (isOperationAborted(error)) {
         return;
     }
 

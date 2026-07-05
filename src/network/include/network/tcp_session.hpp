@@ -100,6 +100,20 @@ private:
     /** @brief Start the next write operation from the pending writes queue. */
     void startNextWrite();
 
+    void onResolveComplete(
+        const boost::system::error_code& error,
+        const boost::asio::ip::tcp::resolver::results_type& results);
+
+    void onConnectComplete(
+        const boost::system::error_code& error,
+        const boost::asio::ip::tcp::endpoint& endpoint);
+
+    void onReadComplete(const boost::system::error_code& error, std::size_t bytesRead);
+
+    void onWriteComplete(const boost::system::error_code& error, std::size_t bytesTransferred);
+
+    static bool isOperationAborted(const boost::system::error_code& error);
+
     /** @brief Report a fatal async failure, close the socket, and notify disconnect. */
     void failConnection(const boost::system::error_code& error);
 
