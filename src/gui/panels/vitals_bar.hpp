@@ -16,6 +16,7 @@ public:
     VitalsBarPanel& operator=(const VitalsBarPanel&) = delete;
 
     void refresh(const mudcore::GameState& state);
+    void clear();
 
 private:
     class ColoredVitalBar;

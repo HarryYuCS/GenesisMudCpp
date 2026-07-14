@@ -54,9 +54,11 @@ MainClientFrame::MainClientFrame(const wxString& title, const wxPoint& pos, cons
     rootSizer->Add(bottomSizer, 0, wxEXPAND);
 
     SetSizer(rootSizer);
-    SetMenuBar(new MenuBar());
+    menuBar_ = new MenuBar();
+    SetMenuBar(menuBar_);
     setConnectionPhase(mudcore::ConnectionPhase::Disconnected);
     connectionFooter_->setPhase(mudcore::ConnectionPhase::Disconnected);
+    menuBar_->updateForPhase(mudcore::ConnectionPhase::Disconnected);
 }
 
 MainDisplay& MainClientFrame::mainDisplay() {
@@ -89,6 +91,10 @@ SystemLogPanel& MainClientFrame::systemLog() {
 
 ConnectionFooterPanel& MainClientFrame::connectionFooter() {
     return *connectionFooter_;
+}
+
+MenuBar& MainClientFrame::menuBar() {
+    return *menuBar_;
 }
 
 void MainClientFrame::setConnectionPhase(const mudcore::ConnectionPhase phase) {

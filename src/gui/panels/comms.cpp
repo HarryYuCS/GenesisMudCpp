@@ -20,9 +20,13 @@ CommsPanel::CommsPanel(wxWindow* parent)
     SetSizer(sizer);
 }
 
-void CommsPanel::appendLine(const std::string_view text) {
+void CommsPanel::append(const std::string_view text) {
     log_->AppendText(wxString::FromUTF8(text.data(), static_cast<int>(text.size())));
-    log_->AppendText("\n");
+    log_->ShowPosition(log_->GetLastPosition());
+}
+
+void CommsPanel::clear() {
+    log_->Clear();
 }
 
 } // namespace genesis::gui

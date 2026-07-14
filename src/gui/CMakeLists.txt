@@ -5,6 +5,7 @@ target_sources(gui
         ${CMAKE_CURRENT_SOURCE_DIR}/app.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/main_frame.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/gui_controller.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/connection_settings.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/controls/main_display.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/controls/magic_map.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/controls/input_bar.cpp
@@ -16,6 +17,9 @@ target_sources(gui
         ${CMAKE_CURRENT_SOURCE_DIR}/panels/system_log.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/panels/connection_footer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/menu/menu_bar.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/dialogs/connect_dialog.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/dialogs/error_dialog.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/dialogs/settings_dialog.cpp
 )
 
 target_include_directories(gui

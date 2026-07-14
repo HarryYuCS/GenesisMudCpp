@@ -83,6 +83,10 @@ public:
         });
     }
 
+    void clearAccumulatedLines() {
+        lines_.clear();
+    }
+
 private:
     boost::asio::io_context io_;
     TcpTestPeer peer_;
@@ -124,6 +128,36 @@ TEST(Session, Poll_CharLogin_DrivesReadyPhase) {
     ASSERT_TRUE(fixture.pollUntil(
         [&]() { return fixture.session().connectionPhase() == ConnectionPhase::Ready; }));
     EXPECT_TRUE(fixture.session().gameState().loggedIn());
+}
+
+TEST(Session, Poll_Reconnect_ReachesConnected) {
+    SessionFixture fixture;
+    fixture.connect();
+    ASSERT_TRUE(fixture.pollUntil([&]() { return fixture.hasSystemLine("Connected."); }));
+
+    fixture.session().disconnect();
+    ASSERT_TRUE(fixture.pollUntil([&]() { return fixture.hasSystemLine("Disconnected."); }));
+    EXPECT_FALSE(fixture.session().gameState().loggedIn());
+
+    fixture.clearAccumulatedLines();
+    fixture.connect();
+    ASSERT_TRUE(fixture.pollUntil([&]() { return fixture.hasSystemLine("Connected."); }));
+    EXPECT_GE(fixture.session().connectionPhase(), ConnectionPhase::Connected);
+}
+
+TEST(Session, Poll_DisconnectResetsGameState) {
+    SessionFixture fixture(TcpTestPeerConfig{
+        .mode = TcpTestPeerMode::PushOnConnect,
+        .pushPayload = concat({iacWillGmcp(), sbGmcp(rawGmcp("Char.Login", charLoginJson()))}),
+    });
+    fixture.connect();
+    ASSERT_TRUE(fixture.pollUntil(
+        [&]() { return fixture.session().connectionPhase() == ConnectionPhase::Ready; }));
+    EXPECT_TRUE(fixture.session().gameState().loggedIn());
+
+    fixture.session().disconnect();
+    EXPECT_FALSE(fixture.session().gameState().loggedIn());
+    EXPECT_TRUE(fixture.session().gameState().playerName().empty());
 }
 
 TEST(Session, Poll_DisconnectEmitsSystemLine) {

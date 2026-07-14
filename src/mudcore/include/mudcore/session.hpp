@@ -19,6 +19,7 @@
 #include <mudcore/event_bus.hpp>
 #include <mudcore/game_state.hpp>
 #include <mudcore/inbound_pipeline.hpp>
+#include <mudcore/gmcp_parser.hpp>
 #include <mudcore/outbound_pipeline.hpp>
 #include <network/network_types.hpp>
 #include <network/tcp_session.hpp>
@@ -118,6 +119,19 @@ public:
      */
     void sendGmcp(std::string_view body);
 
+    /**
+     * @brief Inform the server of the client text window size in character cells.
+     *
+     * Sends Core.Client. Main thread only.
+     *
+     * @param width  Character columns.
+     * @param height Character rows.
+     */
+    void sendClientSize(unsigned width, unsigned height);
+
+    /** @brief Enable GMCP package logging in poll() for diagnostics. Main thread only. */
+    void setDebugLogging(bool enabled) noexcept;
+
 private:
     /**
      * @brief TcpSession read handler (io thread).
@@ -160,6 +174,8 @@ private:
     ConnectionLifeCycle connectionLifeCycle_;
 
     GameState gameState_;
+    GmcpParser gmcpParser_;
+    bool debugLogging_{false};
 };
 
 } // namespace genesis::mudcore

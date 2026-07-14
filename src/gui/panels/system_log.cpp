@@ -17,9 +17,13 @@ SystemLogPanel::SystemLogPanel(wxWindow* parent)
     SetSizer(sizer);
 }
 
-void SystemLogPanel::appendLine(const std::string_view text) {
+void SystemLogPanel::append(const std::string_view text) {
     log_->AppendText(wxString::FromUTF8(text.data(), static_cast<int>(text.size())));
-    log_->AppendText("\n");
+    log_->ShowPosition(log_->GetLastPosition());
+}
+
+void SystemLogPanel::clear() {
+    log_->Clear();
 }
 
 } // namespace genesis::gui

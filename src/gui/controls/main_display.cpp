@@ -11,9 +11,13 @@ MainDisplay::MainDisplay(wxWindow* parent)
           wxDefaultSize,
           wxTE_MULTILINE | wxTE_READONLY) {}
 
-void MainDisplay::appendLine(const std::string_view text) {
+void MainDisplay::append(const std::string_view text) {
     AppendText(wxString::FromUTF8(text.data(), static_cast<int>(text.size())));
-    AppendText("\n");
+    ShowPosition(GetLastPosition());
+}
+
+void MainDisplay::clear() {
+    Clear();
 }
 
 } // namespace genesis::gui

@@ -18,7 +18,8 @@ public:
     MainDisplay(const MainDisplay&) = delete;
     MainDisplay& operator=(const MainDisplay&) = delete;
 
-    void appendLine(std::string_view text);
+    void append(std::string_view text);
+    void clear();
 };
 
 } // namespace genesis::gui

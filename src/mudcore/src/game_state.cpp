@@ -39,18 +39,24 @@ bool applyIntField(const json& payload, const char* key, std::optional<int>& fie
     return true;
 }
 
-/** @brief Assign the array of strings from the JSON payload[key] to the target vector. */
+/** @brief Replace target with the string array from payload[key], if present. */
 bool applyStringArrayField(const json& payload, const char* key, std::vector<std::string>& target) {
     if (!payload.contains(key) || !payload[key].is_array()) {
         return false;
     }
 
+    std::vector<std::string> updated;
     for (const auto& entry : payload[key]) {
         if (!entry.is_string()) {
             continue;
         }
-        target.push_back(entry.get<std::string>());
+        updated.push_back(entry.get<std::string>());
     }
+
+    if (target == updated) {
+        return false;
+    }
+    target = std::move(updated);
     return true;
 }
 
@@ -77,7 +83,21 @@ struct GameState::GmcpApplier {
         changed |= applyStringArrayField(payload, "doors", room.doors);
         changed |= applyIntField(payload, "x", room.x);
         changed |= applyIntField(payload, "y", room.y);
-        return changed; // return true if any field changed
+
+        if (!payload.contains("x") || !payload["x"].is_number_integer()) {
+            if (room.x.has_value()) {
+                room.x.reset();
+                changed = true;
+            }
+        }
+        if (!payload.contains("y") || !payload["y"].is_number_integer()) {
+            if (room.y.has_value()) {
+                room.y.reset();
+                changed = true;
+            }
+        }
+
+        return changed;
     }
 
     static bool applyRoomMap(RoomInfo& room, const json& payload) {
@@ -131,6 +151,19 @@ bool GameState::applyGmcp(const GmcpMessage& message) {
     }
 
     return false;
+}
+
+void GameState::reset() {
+    variables_.clear();
+    healthLevel_.clear();
+    manaLevel_.clear();
+    foodLevel_.clear();
+    drinkLevel_.clear();
+    fatigueLevel_.clear();
+    intoxicationLevel_.clear();
+    currentRoomInfo_ = RoomInfo{};
+    playerName_.clear();
+    loggedIn_ = false;
 }
 
 // getters

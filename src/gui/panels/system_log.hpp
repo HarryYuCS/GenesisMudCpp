@@ -15,7 +15,8 @@ public:
     SystemLogPanel(const SystemLogPanel&) = delete;
     SystemLogPanel& operator=(const SystemLogPanel&) = delete;
 
-    void appendLine(std::string_view text);
+    void append(std::string_view text);
+    void clear();
 
 private:
     wxTextCtrl* log_{nullptr};

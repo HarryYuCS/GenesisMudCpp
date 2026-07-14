@@ -152,4 +152,10 @@ void VitalsBarPanel::refresh(const mudcore::GameState& state) {
     stamina_->setLevel(state.fatigueLevel(), staminaPercent(state.fatigueLevel()));
 }
 
+void VitalsBarPanel::clear() {
+    health_->setLevel("", 0);
+    mana_->setLevel("", 0);
+    stamina_->setLevel("", 0);
+}
+
 } // namespace genesis::gui

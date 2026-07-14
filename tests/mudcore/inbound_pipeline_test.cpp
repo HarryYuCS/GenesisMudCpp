@@ -133,3 +133,15 @@ TEST(InboundPipeline, ProcessGmcp_NonLoginPackages_DoNotReportLogin) {
     EXPECT_FALSE(pipeline.processGmcp(commChannelRaw(), state).playerLoggedIn);
     EXPECT_FALSE(pipeline.processGmcp(unknownPackageRaw(), state).playerLoggedIn);
 }
+
+TEST(InboundPipeline, ProcessGmcp_CoreGoodbye_RoutesToSystem) {
+    InboundPipeline pipeline;
+    GameState state;
+    const auto result = pipeline.processGmcp(R"(Core.Goodbye "Maintenance reboot.")", state);
+
+    ASSERT_TRUE(result.line.has_value());
+    EXPECT_EQ(result.line->sink, OutputSink::System);
+    EXPECT_EQ(result.line->text, "Maintenance reboot.");
+    EXPECT_FALSE(result.stateChanged);
+    EXPECT_FALSE(result.playerLoggedIn);
+}

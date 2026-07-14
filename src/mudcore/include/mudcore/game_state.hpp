@@ -47,6 +47,9 @@ public:
      */
     bool applyGmcp(const GmcpMessage& message);
 
+    /** @brief Reset all tracked fields to their initial empty/disconnected values. */
+    void reset();
+
     /**
      * @brief Current room information for the magic map panel.
      * @return Read-only reference to the current RoomInfo.

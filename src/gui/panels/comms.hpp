@@ -15,7 +15,8 @@ public:
     CommsPanel(const CommsPanel&) = delete;
     CommsPanel& operator=(const CommsPanel&) = delete;
 
-    void appendLine(std::string_view text);
+    void append(std::string_view text);
+    void clear();
 
 private:
     wxTextCtrl* log_{nullptr};

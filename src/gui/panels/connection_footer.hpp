@@ -5,6 +5,8 @@
 
 #include <wx/wx.h>
 
+#include <functional>
+
 namespace genesis::gui {
 
 class ConnectionFooterPanel : public wxPanel {
@@ -16,9 +18,20 @@ public:
     ConnectionFooterPanel& operator=(const ConnectionFooterPanel&) = delete;
 
     void setPhase(mudcore::ConnectionPhase phase);
+    void setOnConnect(std::function<void()> callback);
+    void setOnDisconnect(std::function<void()> callback);
+    void setOnSettings(std::function<void()> callback);
 
 private:
+    void onConnectButton(wxCommandEvent& event);
+    void onSettingsButton(wxCommandEvent& event);
+
     wxStaticText* phaseLabel_{nullptr};
+    wxButton* connectButton_{nullptr};
+    mudcore::ConnectionPhase phase_{mudcore::ConnectionPhase::Disconnected};
+    std::function<void()> onConnect_;
+    std::function<void()> onDisconnect_;
+    std::function<void()> onSettings_;
 };
 
 } // namespace genesis::gui

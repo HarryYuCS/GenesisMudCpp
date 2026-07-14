@@ -3,6 +3,7 @@
 
 #include <controls/input_bar.hpp>
 #include <controls/main_display.hpp>
+#include <menu/menu_bar.hpp>
 #include <mudcore/connection_life_cycle.hpp>
 #include <panels/connection_footer.hpp>
 #include <panels/comms.hpp>
@@ -31,6 +32,7 @@ public:
     VitalsBarPanel& vitalsBar();
     SystemLogPanel& systemLog();
     ConnectionFooterPanel& connectionFooter();
+    MenuBar& menuBar();
 
     void setConnectionPhase(mudcore::ConnectionPhase phase);
 
@@ -43,6 +45,7 @@ private:
     InputBar* inputBar_{nullptr};
     VitalsBarPanel* vitalsBar_{nullptr};
     ConnectionFooterPanel* connectionFooter_{nullptr};
+    MenuBar* menuBar_{nullptr};
 };
 
 } // namespace genesis::gui

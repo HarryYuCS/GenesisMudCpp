@@ -19,8 +19,10 @@ public:
 
     MagicMapPanel& magicMapPanel();
     SystemLogPanel& systemLogPanel();
+    void selectSystemLogTab();
 
 private:
+    wxNotebook* notebook_{nullptr};
     MagicMapPanel* magicMapPanel_{nullptr};
     SystemLogPanel* systemLogPanel_{nullptr};
 };

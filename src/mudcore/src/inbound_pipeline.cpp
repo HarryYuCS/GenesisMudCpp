@@ -19,6 +19,23 @@ std::string extractCommMessage(const std::string_view jsonBody) {
     return std::string(jsonBody);
 }
 
+/** @brief Extract the disconnect reason from a Core.Goodbye JSON body. */
+std::string extractGoodbyeMessage(const std::string_view jsonBody) {
+    if (jsonBody.empty()) {
+        return "Server disconnected.";
+    }
+
+    try {
+        const nlohmann::json payload = nlohmann::json::parse(jsonBody);
+        if (payload.is_string()) {
+            return payload.get<std::string>();
+        }
+    } catch (const nlohmann::json::parse_error&) {
+    }
+
+    return std::string(jsonBody);
+}
+
 } // namespace
 
 std::optional<DisplayLine> InboundPipeline::processMudText(const std::string_view text) const {
@@ -37,6 +54,14 @@ GmcpInboundResult InboundPipeline::processGmcp(const std::string_view rawBody, G
 }
 
 GmcpInboundResult InboundPipeline::processParsedGmcp(const GmcpMessage& message, GameState& gameState) const {
+    if (equalsIgnoreCase(message.package, "Core.Goodbye")) {
+        return GmcpInboundResult{
+            DisplayLine{OutputSink::System, extractGoodbyeMessage(message.jsonBody)},
+            false,
+            false,
+        };
+    }
+
     if (startsWithIgnoreCase(message.package, "Comm.")) {
         return GmcpInboundResult{
             DisplayLine{OutputSink::Comms, extractCommMessage(message.jsonBody)},

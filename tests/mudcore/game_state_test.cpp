@@ -147,3 +147,39 @@ TEST(GameState, ApplyGmcp_ReturnsFalseWhenUnchanged) {
     ASSERT_TRUE(state.applyGmcp(charVitalsMessage()));
     EXPECT_FALSE(state.applyGmcp(charVitalsMessage()));
 }
+
+TEST(GameState, Reset_ClearsAllFields) {
+    GameState state;
+    state.applyGmcp(charVitalsMessage());
+    state.applyGmcp(roomInfoMessage());
+    state.applyGmcp(roomMapMessage());
+    state.applyGmcp(charLoginMessage());
+    state.setVariable("foo", "bar");
+
+    state.reset();
+
+    EXPECT_TRUE(state.room().roomId.empty());
+    EXPECT_TRUE(state.healthLevel().empty());
+    EXPECT_TRUE(state.room().map.empty());
+    EXPECT_FALSE(state.loggedIn());
+    EXPECT_TRUE(state.playerName().empty());
+    EXPECT_TRUE(state.getVariable("foo").empty());
+}
+
+TEST(GameState, ApplyGmcp_RoomInfo_ReplacesExitsOnSecondUpdate) {
+    GameState state;
+    state.applyGmcp(roomInfoMessage());
+
+    GmcpMessage secondRoom{
+        "Room.Info",
+        R"({"id":"room2","short":"A forest path.","exits":["south"],"doors":[]})",
+    };
+    state.applyGmcp(secondRoom);
+
+    EXPECT_EQ(state.room().roomId, "room2");
+    ASSERT_EQ(state.room().exits.size(), 1U);
+    EXPECT_EQ(state.room().exits[0], "south");
+    EXPECT_TRUE(state.room().doors.empty());
+    EXPECT_FALSE(state.room().x.has_value());
+    EXPECT_FALSE(state.room().y.has_value());
+}

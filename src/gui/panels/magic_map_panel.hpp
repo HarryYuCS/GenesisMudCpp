@@ -17,10 +17,13 @@ public:
     MagicMapPanel(const MagicMapPanel&) = delete;
     MagicMapPanel& operator=(const MagicMapPanel&) = delete;
 
+    void setRoomDescription(std::string_view text);
     void setMapText(std::string_view text);
+    void clear();
     MagicMap& map();
 
 private:
+    wxStaticText* roomLabel_{nullptr};
     MagicMap* map_{nullptr};
 };
 
