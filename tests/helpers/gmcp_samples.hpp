@@ -8,7 +8,7 @@
 namespace genesis::test {
 
 inline std::string_view charVitalsJson() {
-    return R"({"health":"very hurt","mana":"in full vigour","food":"satisfied","drink":"quenched","fatigue":"rested","intoxication":"sober"})";
+    return R"({"health":"very hurt","mana":"in full vigour","food":"satisfied","drink":"quenched","fatigue":"alert","intoxication":"sober"})";
 }
 
 inline std::string_view roomInfoJson() {

@@ -5,7 +5,9 @@
 #include <wx/dcbuffer.h>
 
 #include <algorithm>
+#include <cctype>
 #include <span>
+#include <string>
 #include <string_view>
 
 namespace genesis::gui {
@@ -15,23 +17,68 @@ namespace {
 constexpr int kMinFillPercent = 5;
 constexpr int kMaxFillPercent = 100;
 
-int percentFromOrderedScale(std::string_view level, std::span<const std::string_view> worstToBest) {
-    if (level.empty()) {
-        return 0;
+std::string_view trimAscii(std::string_view text) {
+    while (!text.empty() && std::isspace(static_cast<unsigned char>(text.front()))) {
+        text.remove_prefix(1);
     }
-    if (worstToBest.size() == 1) {
-        return genesis::mudcore::equalsIgnoreCase(level, worstToBest.front()) ? kMaxFillPercent : 50;
+    while (!text.empty() && std::isspace(static_cast<unsigned char>(text.back()))) {
+        text.remove_suffix(1);
+    }
+    return text;
+}
+
+bool equalsIgnoreCase(std::string_view left, std::string_view right) {
+    return genesis::mudcore::equalsIgnoreCase(left, right);
+}
+
+/** @brief Resolve level to an index in worstToBest, or -1 if unknown. */
+int indexInScale(std::string_view level, std::span<const std::string_view> worstToBest) {
+    level = trimAscii(level);
+    if (level.empty()) {
+        return -1;
     }
 
     for (std::size_t index = 0; index < worstToBest.size(); ++index) {
-        if (genesis::mudcore::equalsIgnoreCase(level, worstToBest[index])) {
-            const int span = kMaxFillPercent - kMinFillPercent;
-            return kMinFillPercent
-                + static_cast<int>((index * span) / (worstToBest.size() - 1));
+        if (equalsIgnoreCase(level, worstToBest[index])) {
+            return static_cast<int>(index);
         }
     }
 
-    return 50;
+    // Accept common short forms / prefixes (e.g. "death's door" vs "at death's door").
+    for (std::size_t index = 0; index < worstToBest.size(); ++index) {
+        const std::string_view known = worstToBest[index];
+        if (level.size() >= known.size()
+            && equalsIgnoreCase(level.substr(level.size() - known.size()), known)) {
+            return static_cast<int>(index);
+        }
+        if (known.size() >= level.size()
+            && equalsIgnoreCase(known.substr(known.size() - level.size()), level)) {
+            return static_cast<int>(index);
+        }
+    }
+
+    return -1;
+}
+
+int percentFromOrderedScale(std::string_view level, std::span<const std::string_view> worstToBest) {
+    if (trimAscii(level).empty()) {
+        return 0;
+    }
+    if (worstToBest.empty()) {
+        return 50;
+    }
+    if (worstToBest.size() == 1) {
+        return indexInScale(level, worstToBest) == 0 ? kMaxFillPercent : 50;
+    }
+
+    const int index = indexInScale(level, worstToBest);
+    if (index < 0) {
+        return 50;
+    }
+
+    const int span = kMaxFillPercent - kMinFillPercent;
+    return kMinFillPercent
+        + static_cast<int>((static_cast<std::size_t>(index) * span) / (worstToBest.size() - 1));
 }
 
 // Genesis vital scales (worst → best), from Char.Vitals.Levels.
@@ -67,7 +114,7 @@ constexpr std::string_view kManaLevels[] = {
     "in full vigour",
 };
 
-// Listed best-to-worst in-game; reversed here to worst → best.
+// Official Genesis fatigue levels (help / Char.Vitals.Levels): worst → best.
 constexpr std::string_view kFatigueLevels[] = {
     "exhausted",
     "tired",
@@ -75,8 +122,25 @@ constexpr std::string_view kFatigueLevels[] = {
     "alert",
 };
 
+std::string_view normalizeFatigueAlias(std::string_view level) {
+    level = trimAscii(level);
+    // Legacy / sample wording; treat as best fatigue.
+    if (equalsIgnoreCase(level, "rested")) {
+        return "alert";
+    }
+    return level;
+}
+
+std::string_view normalizeHealthAlias(std::string_view level) {
+    level = trimAscii(level);
+    if (equalsIgnoreCase(level, "death's door")) {
+        return "at death's door";
+    }
+    return level;
+}
+
 int healthPercent(const std::string_view level) {
-    return percentFromOrderedScale(level, kHealthLevels);
+    return percentFromOrderedScale(normalizeHealthAlias(level), kHealthLevels);
 }
 
 int manaPercent(const std::string_view level) {
@@ -84,7 +148,7 @@ int manaPercent(const std::string_view level) {
 }
 
 int staminaPercent(const std::string_view level) {
-    return percentFromOrderedScale(level, kFatigueLevels);
+    return percentFromOrderedScale(normalizeFatigueAlias(level), kFatigueLevels);
 }
 
 } // namespace

@@ -10,6 +10,8 @@
 
 #include <wx/dcclient.h>
 
+#include <string>
+
 namespace genesis::gui {
 
 namespace {
@@ -118,6 +120,8 @@ void GuiController::disconnect() {
 }
 
 void GuiController::submitCommand(const std::string_view command) {
+    const std::string echo = "\n> " + std::string(command) + "\n";
+    frame_.mainDisplay().appendStyled(echo, wxColour(0, 128, 160));
     session_.sendCommand(command);
 }
 

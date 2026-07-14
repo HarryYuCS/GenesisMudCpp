@@ -14,6 +14,7 @@ CommsPanel::CommsPanel(wxWindow* parent)
         wxDefaultPosition,
         wxDefaultSize,
         wxTE_MULTILINE | wxTE_READONLY);
+    log_->SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 
     sizer->Add(label, 0, wxLEFT | wxRIGHT | wxTOP, 4);
     sizer->Add(log_, 1, wxEXPAND | wxALL, 4);

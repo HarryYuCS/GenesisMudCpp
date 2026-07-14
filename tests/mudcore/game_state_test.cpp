@@ -70,7 +70,7 @@ TEST(GameState, ApplyGmcp_CharVitals_UpdatesAllVitals) {
     EXPECT_EQ(state.manaLevel(), "in full vigour");
     EXPECT_EQ(state.foodLevel(), "satisfied");
     EXPECT_EQ(state.drinkLevel(), "quenched");
-    EXPECT_EQ(state.fatigueLevel(), "rested");
+    EXPECT_EQ(state.fatigueLevel(), "alert");
     EXPECT_EQ(state.intoxicationLevel(), "sober");
 }
 

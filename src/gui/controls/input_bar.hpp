@@ -4,7 +4,9 @@
 #include <wx/wx.h>
 
 #include <functional>
+#include <string>
 #include <string_view>
+#include <vector>
 
 namespace genesis::gui {
 
@@ -20,8 +22,13 @@ public:
 
 private:
     void onEnter(wxCommandEvent& event);
+    void onKeyDown(wxKeyEvent& event);
+    void pushHistory(const std::string& command);
+    void showHistoryEntry(int index);
 
     std::function<void(std::string_view)> onSubmit_;
+    std::vector<std::string> history_;
+    int historyIndex_{-1}; ///< -1 means "editing current / past end"
 };
 
 } // namespace genesis::gui

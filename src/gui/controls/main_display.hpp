@@ -19,6 +19,7 @@ public:
     MainDisplay& operator=(const MainDisplay&) = delete;
 
     void append(std::string_view text);
+    void appendStyled(std::string_view text, const wxColour& colour);
     void clear();
 };
 

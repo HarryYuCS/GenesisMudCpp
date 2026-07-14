@@ -3,9 +3,28 @@
 
 #include <nlohmann/json.hpp>
 
+#include <string>
+
 namespace genesis::mudcore {
 
 namespace {
+
+/** @brief Normalize telnet CRLF for display: CRLF -> LF, strip lone CR. */
+std::string normalizeMudTextLineEndings(const std::string_view text) {
+    std::string out;
+    out.reserve(text.size());
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const char ch = text[i];
+        if (ch == '\r') {
+            if (i + 1 < text.size() && text[i + 1] == '\n') {
+                continue;
+            }
+            continue;
+        }
+        out.push_back(ch);
+    }
+    return out;
+}
 
 /** @brief Extract the comm message from the JSON body of GMCP Comm. messages.*/
 std::string extractCommMessage(const std::string_view jsonBody) {
@@ -42,7 +61,7 @@ std::optional<DisplayLine> InboundPipeline::processMudText(const std::string_vie
     if (text.empty()) {
         return std::nullopt;
     }
-    return DisplayLine{OutputSink::Main, std::string(text)};
+    return DisplayLine{OutputSink::Main, normalizeMudTextLineEndings(text)};
 }
 
 GmcpInboundResult InboundPipeline::processGmcp(const std::string_view rawBody, GameState& gameState) const {
@@ -56,15 +75,16 @@ GmcpInboundResult InboundPipeline::processGmcp(const std::string_view rawBody, G
 GmcpInboundResult InboundPipeline::processParsedGmcp(const GmcpMessage& message, GameState& gameState) const {
     if (equalsIgnoreCase(message.package, "Core.Goodbye")) {
         return GmcpInboundResult{
-            DisplayLine{OutputSink::System, extractGoodbyeMessage(message.jsonBody)},
+            DisplayLine{OutputSink::System, extractGoodbyeMessage(message.jsonBody) + '\n'},
             false,
             false,
         };
     }
 
     if (startsWithIgnoreCase(message.package, "Comm.")) {
+        // GMCP Comm payloads are one logical message with no trailing newline.
         return GmcpInboundResult{
-            DisplayLine{OutputSink::Comms, extractCommMessage(message.jsonBody)},
+            DisplayLine{OutputSink::Comms, extractCommMessage(message.jsonBody) + '\n'},
             false,
             false,
         };

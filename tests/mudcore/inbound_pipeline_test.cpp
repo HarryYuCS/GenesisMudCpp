@@ -40,6 +40,14 @@ TEST(InboundPipeline, ProcessMudText_PreservesContent) {
     EXPECT_EQ(line->text, "line one\nline two");
 }
 
+TEST(InboundPipeline, ProcessMudText_NormalizesCrlf) {
+    InboundPipeline pipeline;
+    const auto line = pipeline.processMudText("col1  col2\r\nnext\ralone");
+
+    ASSERT_TRUE(line.has_value());
+    EXPECT_EQ(line->text, "col1  col2\nnextalone");
+}
+
 TEST(InboundPipeline, ProcessGmcp_Comm_RoutesToComms) {
     InboundPipeline pipeline;
     GameState state;
@@ -47,7 +55,7 @@ TEST(InboundPipeline, ProcessGmcp_Comm_RoutesToComms) {
 
     ASSERT_TRUE(result.line.has_value());
     EXPECT_EQ(result.line->sink, OutputSink::Comms);
-    EXPECT_EQ(result.line->text, "You say: How are you?");
+    EXPECT_EQ(result.line->text, "You say: How are you?\n");
     EXPECT_FALSE(result.stateChanged);
 }
 
@@ -58,7 +66,7 @@ TEST(InboundPipeline, ProcessGmcp_Comm_UsesMessageField) {
 
     ASSERT_TRUE(result.line.has_value());
     EXPECT_NE(result.line->text, commChannelJson());
-    EXPECT_EQ(result.line->text, "You say: How are you?");
+    EXPECT_EQ(result.line->text, "You say: How are you?\n");
 }
 
 TEST(InboundPipeline, ProcessGmcp_RoomInfo_UpdatesState) {
@@ -141,7 +149,7 @@ TEST(InboundPipeline, ProcessGmcp_CoreGoodbye_RoutesToSystem) {
 
     ASSERT_TRUE(result.line.has_value());
     EXPECT_EQ(result.line->sink, OutputSink::System);
-    EXPECT_EQ(result.line->text, "Maintenance reboot.");
+    EXPECT_EQ(result.line->text, "Maintenance reboot.\n");
     EXPECT_FALSE(result.stateChanged);
     EXPECT_FALSE(result.playerLoggedIn);
 }

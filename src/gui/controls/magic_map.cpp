@@ -9,7 +9,9 @@ MagicMap::MagicMap(wxWindow* parent)
           wxEmptyString,
           wxDefaultPosition,
           wxDefaultSize,
-          wxTE_MULTILINE | wxTE_READONLY) {}
+          wxTE_MULTILINE | wxTE_READONLY) {
+    SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+}
 
 void MagicMap::setMapText(const std::string_view text) {
     SetValue(wxString::FromUTF8(text.data(), static_cast<int>(text.size())));
