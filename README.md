@@ -6,6 +6,6 @@ This client is under development, but is planned to support aliases and triggers
 
 ## Development Roadmap
 
-- Core gmcp library (Parser, Telnet + GMCP)
-- wxWidget GUI client
+- ~~Core gmcp library (Parser, Telnet + GMCP)~~
+- ~~wxWidget GUI client~~
 - Aliases and Triggers
