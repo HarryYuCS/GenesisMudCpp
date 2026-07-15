@@ -118,6 +118,10 @@ TEST(GameState, ApplyGmcp_RoomInfo_ParsesDoorsAndCoords) {
     ASSERT_TRUE(state.room().y.has_value());
     EXPECT_EQ(*state.room().x, 10);
     EXPECT_EQ(*state.room().y, 20);
+    ASSERT_TRUE(state.room().zoomX.has_value());
+    ASSERT_TRUE(state.room().zoomY.has_value());
+    EXPECT_EQ(*state.room().zoomX, 3);
+    EXPECT_EQ(*state.room().zoomY, 4);
 }
 
 TEST(GameState, ApplyGmcp_RoomMap_UpdatesMapGraphics) {
@@ -182,4 +186,6 @@ TEST(GameState, ApplyGmcp_RoomInfo_ReplacesExitsOnSecondUpdate) {
     EXPECT_TRUE(state.room().doors.empty());
     EXPECT_FALSE(state.room().x.has_value());
     EXPECT_FALSE(state.room().y.has_value());
+    EXPECT_FALSE(state.room().zoomX.has_value());
+    EXPECT_FALSE(state.room().zoomY.has_value());
 }

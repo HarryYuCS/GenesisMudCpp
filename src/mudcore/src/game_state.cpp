@@ -83,6 +83,8 @@ struct GameState::GmcpApplier {
         changed |= applyStringArrayField(payload, "doors", room.doors);
         changed |= applyIntField(payload, "x", room.x);
         changed |= applyIntField(payload, "y", room.y);
+        changed |= applyIntField(payload, "zoomx", room.zoomX);
+        changed |= applyIntField(payload, "zoomy", room.zoomY);
 
         if (!payload.contains("x") || !payload["x"].is_number_integer()) {
             if (room.x.has_value()) {
@@ -93,6 +95,18 @@ struct GameState::GmcpApplier {
         if (!payload.contains("y") || !payload["y"].is_number_integer()) {
             if (room.y.has_value()) {
                 room.y.reset();
+                changed = true;
+            }
+        }
+        if (!payload.contains("zoomx") || !payload["zoomx"].is_number_integer()) {
+            if (room.zoomX.has_value()) {
+                room.zoomX.reset();
+                changed = true;
+            }
+        }
+        if (!payload.contains("zoomy") || !payload["zoomy"].is_number_integer()) {
+            if (room.zoomY.has_value()) {
+                room.zoomY.reset();
                 changed = true;
             }
         }

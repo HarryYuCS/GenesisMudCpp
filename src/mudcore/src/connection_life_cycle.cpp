@@ -43,7 +43,7 @@ void ConnectionLifeCycle::onPlayerLoggedIn() {
 
 void ConnectionLifeCycle::sendGenesisHandshake() {
     sendGmcp_(R"(Core.Hello {"client":"GenesisCpp","version":"0.1"})");
-    sendGmcp_(R"(Core.Supports.Set ["Char 1","Room 1","Comm 1","Core 1"])");
+    sendGmcp_(R"(Core.Supports.Set ["Char 1","Room 1","Comm 1","Core 1"])"); 
     phase_ = ConnectionPhase::HandshakeSent;
 }
 

@@ -8,7 +8,8 @@ RightColumnPanel::RightColumnPanel(wxWindow* parent)
     comms_ = new CommsPanel(this);
 
     auto* sizer = new wxBoxSizer(wxVERTICAL);
-    sizer->Add(mapNotebook_, 1, wxEXPAND | wxALL, 4);
+    // Give MAGIC MAP / SYSTEM most of the column; keep COMMS as a smaller strip.
+    sizer->Add(mapNotebook_, 3, wxEXPAND | wxALL, 4);
     sizer->Add(comms_, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 4);
     SetSizer(sizer);
 }

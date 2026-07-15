@@ -12,7 +12,7 @@ inline std::string_view charVitalsJson() {
 }
 
 inline std::string_view roomInfoJson() {
-    return R"({"id":"iX5PnH","short":"A busy plaza.","exits":["north","east"],"doors":["north"],"x":10,"y":20})";
+    return R"({"id":"iX5PnH","short":"A busy plaza.","exits":["north","east"],"doors":["north"],"x":10,"y":20,"zoomx":3,"zoomy":4})";
 }
 
 inline std::string_view roomMapJson() {

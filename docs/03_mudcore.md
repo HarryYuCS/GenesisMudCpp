@@ -80,8 +80,8 @@ commands through unchanged. Alias expansion is planned.
 
 `reset()` clears all fields; called on disconnect during `poll()`.
 
-`Room.Info` replaces `exits`/`doors` arrays on each update (not append). Coordinates clear
-when omitted from a subsequent broadcast.
+`Room.Info` replaces `exits`/`doors` arrays on each update (not append). Coordinates
+(`x`/`y` and stored `zoomx`/`zoomy`) clear when omitted from a subsequent broadcast.
 
 ## EventBus
 

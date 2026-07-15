@@ -3,6 +3,7 @@ add_executable(mudcore_tests
     connection_lifecycle_test.cpp
     event_bus_test.cpp
     game_state_test.cpp
+    map_overlay_test.cpp
     inbound_pipeline_test.cpp
     outbound_pipeline_test.cpp
     session_test.cpp

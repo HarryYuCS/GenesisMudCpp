@@ -88,8 +88,11 @@ flowchart LR
 | `System` | `SystemLogPanel` (notebook tab) |
 
 `GameState` updates (vitals, room map) arrive via `PollResult::stateChanged`. The controller
-refreshes `VitalsBarPanel` and `MagicMapPanel` (room short description label; zoom map
-preferred over full map when available).
+refreshes `VitalsBarPanel` and `MagicMapPanel` (room short description label; full
+`Room.Map` `map` text with a red `X` overlaid at `Room.Info` `x`/`y` when both coordinates
+are present). The magic map uses a smaller monospace font and scrolls to the top on each
+refresh. Zoom map graphics and `zoomx`/`zoomy` may be stored in `GameState` but are not
+used for display yet.
 
 ### Settings persistence
 
@@ -102,15 +105,18 @@ name `GenesisMUD`. `ConnectDialog` and `SettingsDialog` load and save the same k
 ┌─────────────────────────────────────────────────────────────┐
 │ Menu bar                                                    │
 ├──────────────────────────────┬──────────────────────────────┤
-│ Main display                 │ Comms                        │
+│ Main display                 │ Notebook: MAGIC MAP | SYSTEM │
+│                              │ (larger share of right col)  │
 │                              ├──────────────────────────────┤
-│                              │ Notebook: MAGIC MAP | SYSTEM │
+│                              │ Comms (smaller strip)        │
 ├──────────────────────────────┴──────────────────────────────┤
 │ Input bar                                                   │
 │ Vitals bars (health / mana / stamina)                       │
 │ Connection footer (phase, connect / disconnect / settings)    │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+Input bar Up/Down history skips `n` / `s` / `e` / `w` (still send and keep/select-all on Enter).
 
 ## Dialogs
 

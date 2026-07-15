@@ -7,6 +7,7 @@
 #include <dialogs/settings_dialog.hpp>
 #include <menu/menu_bar.hpp>
 #include <mudcore/display_line.hpp>
+#include <mudcore/map_overlay.hpp>
 
 #include <wx/dcclient.h>
 
@@ -230,8 +231,13 @@ void GuiController::onTimer(wxTimerEvent& /*event*/) {
         const mudcore::RoomInfo& room = session_.gameState().room();
         frame_.vitalsBar().refresh(session_.gameState());
         frame_.magicMapPanel().setRoomDescription(room.shortDescription);
-        const std::string& mapText = !room.zoom.empty() ? room.zoom : room.map;
-        frame_.magicMapPanel().setMapText(mapText);
+        std::string mapText = room.map;
+        if (room.x.has_value() && room.y.has_value()) {
+            mapText = mudcore::overlayPlayerMarker(room.map, *room.x, *room.y);
+            frame_.magicMapPanel().setMapText(mapText, *room.x, *room.y);
+        } else {
+            frame_.magicMapPanel().setMapText(mapText);
+        }
     }
 }
 
@@ -281,7 +287,7 @@ void GuiController::applySettings() {
 void GuiController::logPhaseChange(
     const mudcore::ConnectionPhase from,
     const mudcore::ConnectionPhase to) {
-    const wxString message = "Phase: " + phaseLabel(from) + " -> " + phaseLabel(to) + "\n";
+    const wxString message = "Phase: " + phaseLabel(from) + " -> " + phaseLabel(to);
     frame_.systemLog().append(message.ToUTF8().data());
 }
 

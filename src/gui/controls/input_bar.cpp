@@ -6,6 +6,11 @@ namespace {
 
 constexpr std::size_t kMaxHistory = 100;
 
+/** @brief Single-letter cardinal moves are too noisy for Up/Down recall. */
+bool isHistoryBlacklisted(const std::string& command) {
+    return command == "n" || command == "s" || command == "e" || command == "w";
+}
+
 } // namespace
 
 InputBar::InputBar(wxWindow* parent)
@@ -25,7 +30,7 @@ void InputBar::setOnSubmit(std::function<void(std::string_view)> callback) {
 }
 
 void InputBar::pushHistory(const std::string& command) {
-    if (command.empty()) {
+    if (command.empty() || isHistoryBlacklisted(command)) {
         return;
     }
     if (!history_.empty() && history_.back() == command) {

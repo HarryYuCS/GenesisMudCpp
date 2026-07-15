@@ -5,6 +5,7 @@
 
 #include <wx/wx.h>
 
+#include <optional>
 #include <string_view>
 
 namespace genesis::gui {
@@ -18,7 +19,10 @@ public:
     MagicMapPanel& operator=(const MagicMapPanel&) = delete;
 
     void setRoomDescription(std::string_view text);
-    void setMapText(std::string_view text);
+    void setMapText(
+        std::string_view text,
+        std::optional<int> markerX = std::nullopt,
+        std::optional<int> markerY = std::nullopt);
     void clear();
     MagicMap& map();
 

@@ -1,5 +1,7 @@
 #include <panels/system_log.hpp>
 
+#include <wx/datetime.h>
+
 namespace genesis::gui {
 
 SystemLogPanel::SystemLogPanel(wxWindow* parent)
@@ -18,7 +20,17 @@ SystemLogPanel::SystemLogPanel(wxWindow* parent)
 }
 
 void SystemLogPanel::append(const std::string_view text) {
-    log_->AppendText(wxString::FromUTF8(text.data(), static_cast<int>(text.size())));
+    std::string_view body = text;
+    while (!body.empty() && (body.back() == '\n' || body.back() == '\r')) {
+        body.remove_suffix(1);
+    }
+    if (body.empty()) {
+        return;
+    }
+
+    const wxString stamp = wxDateTime::Now().Format("%H:%M:%S");
+    const wxString message = wxString::FromUTF8(body.data(), static_cast<int>(body.size()));
+    log_->AppendText(wxString::Format("[%s] %s\n", stamp, message));
     log_->ShowPosition(log_->GetLastPosition());
 }
 

@@ -14,6 +14,7 @@ target_sources(mudcore
         ${CMAKE_CURRENT_SOURCE_DIR}/src/connection_life_cycle.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/gmcp_parser.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/game_state.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/map_overlay.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/event_bus.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/inbound_pipeline.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/outbound_pipeline.cpp

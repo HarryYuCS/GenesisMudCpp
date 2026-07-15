@@ -27,6 +27,8 @@ struct RoomInfo {
     std::vector<std::string> doors;
     std::optional<int> x;
     std::optional<int> y;
+    std::optional<int> zoomX;  ///< Stored for future use; not used for display yet.
+    std::optional<int> zoomY;  ///< Stored for future use; not used for display yet.
     std::string map;   ///< Map graphics from Room.Map.
     std::string zoom;  ///< Zoomed map graphics from Room.Map.
 };
